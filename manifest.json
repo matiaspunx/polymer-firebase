@@ -1,0 +1,7 @@
+{
+  "name": "Pequeña demo de Polymer y Firebase",
+  "short_name": "PDF",
+  "description": "Una pequeña demo de Polymer y Firebase",
+  "start_url": "/",
+  "display": "standalone"
+}

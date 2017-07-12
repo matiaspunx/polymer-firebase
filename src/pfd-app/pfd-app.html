@@ -1,0 +1,127 @@
+<!--
+¡HEY! este es tu primer web component.
+que tiene la siguiente estructura:
+DOM-MODULE (que tiene el id con el cual vamos a registrar el nuevo componente en nuestro DOM)
+ TEMPLATE (donde va todo nuestro contenido html y css que va a ser encapsulado dentro del web component)
+  STYLE (estilos de nuestro component solo afecta a elementos del componente)
+  CONTENIDO HTML O COMPONENTES
+ SCRIPT (Donde va el constructor de Polymer que se encarga de registrar el componento en el DOM, ademas podriamos tener javascript vanilla o usar alguna libreria)
+-->
+
+<!-- otra vez vamos a importar los 2 componentes principales para trabajar con nuestra app -->
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/polymerfire/polymerfire.html">
+
+<!-- como lo dice declarativamente, este va a ser el modulo que vamos a registrar en el DOM, con un id, con ese id vamos a registrar el componente -->
+<dom-module id="pfd-app">
+  <!-- acá tenemos la etiqueta template que representa el contenido de nuestro componente, donde vamos a tener el markup html y css -->
+  <template>
+    <style>
+      :host { /* el selector :host toma el componente completo. le agregamos la propiedad display con el valor block porque en algunos navegadores que no soportan web components es necesario */
+        display: block;
+        color: #333;
+      }
+      .container {
+        width: 90%;
+        margin: 0 auto;
+      }
+      h1 {
+        color: #999
+      }
+      input, textarea {
+        color:#666;
+        display: block;
+        width: 100%;
+        border:1px solid #ccc;
+        font-size: 18px;
+        font-weight: normal;
+        padding: 5px;
+        margin: 0 0 5px;
+      }
+      label {
+        color: #999;
+        font-size: 12px;
+        margin: 5px 0;
+      }
+      /* los estilos que vimos arriba son simples para darle un poco de formato al formulario */
+    </style>
+
+    <!-- <firebase-auth> es el componente de "polymerfire" que se encarga de hacer el login con firebase. Funciona todo de forma declarativa, fijate que le asignamos un id como a todo componente para poder llegar a el desde javascript. despues tenemos algunos atributos, app-name que tiene el mismo valor del atributo name de <firebase-app>, el conector de firebase que tenemos en index.html. Despues tenemos el atributo provider donde le vamos a decir con que proveedor queremos hacer el login, en este caso usamos google. el atributo signed-in cuyo valor es una variable de doble binding (si alguno vio angular o ember va a estar acostumbrado, sino revisen en este documento: https://www.polymer-project.org/1.0/docs/devguide/data-binding), tenemos otro atributo user tambien con una variable y por ultimo un atributo on-error que nos va a capturar el evento de error en el login, el valor de este atributo es una función (handleError), pueden verla mas abajo -->
+    <firebase-auth
+    id="auth"
+    app-name="pfd-app"
+    provider="google"
+    signed-in="{{signedIn}}"
+    user="{{user}}"
+    on-error="handleError">
+    </firebase-auth>
+
+    <!-- <firebase-document> es el component de polymerfire que se encarga de intectactuar con los objectos de nuestra base de datos en firebase y exponerlos en el sistema de databinding de polymer. Tambien tiene algunos atributos, el primero es app-name, para utilizar la conexión existente, con el mismo valor que tiene el atributo name en <firebase-app> nuestro conector en index.html. Después tenemos path, donde le indicamos el path del objeto al que queremos acceder en la base de datos y luego un atributo data donde capturamos el objectos de la base de datos y con el cual vamos a actualizar  -->
+    <firebase-document
+    id="document"
+    app-name="pfd-app"
+    path="/users/[[user.uid]]"
+    data="{{datos}}"
+    ></firebase-document>
+
+    <div class="container">
+    <!-- ¡HTML! estoy ya lo conocemos re bien o al menos es lo que espero. Tenemos un simple div que vamos a usar como contenedor del titulo de nuestra app y tiene uno atributo "raro"... el atributo hidden con un simbolo de $ al final. Ese simbolo de $ significa que el valor de ese atributo puede cambiar tiempo real y lo bueno es que cuando cambie puedo hacer algo con eso. En este caso estamos comprobando un binding del tipo "one way" (si leyeron mas arriba la documentación sobre data binding van a entender sino lean!), estamos comprobando que la variable usuario sea true, si es true, obviamente hidden va a ser igual a true, entonces vamos a ocultar el div, dentro del div tenemos el titulo y el boton de login y un binding invitado que se reemplaza con la propiedad "invitado" que vamos a ver más abajo -->
+    <div hidden$="[[user]]">
+      <h1>Hola, [[invitado]] Conectate para continuar</h1>
+      <button type="button" on-tap="login">Login con Google</button>
+    </div>
+    <!-- en este caso como estamos negando la variable si hay usuario vamos a mostrar el h2. Dentro de este h2 tenemos un binding de un objeto displayName que viene directo del objeto user que nos devuelve <firebase-auth> -->
+    <div hidden$="[[!user]]">
+      <h1>Hola, [[user.displayName]]</h1>
+    </div>
+
+
+    <p>Lo que vamos a cargar es un simple perfil de usuario:</p>
+    <form class="form" action="#" method="post">
+
+      <label for="usuario">Tu nombre de usuario</label>
+      <input type="text" id="usuario" name="usuario" value="[[datos.nombre]]">
+
+      <label for="email">Tu email</label>
+      <input type="text" id="email" name="email" value="[[datos.email]]">
+
+      <label for="mensaje">Tu mensaje</label>
+      <textarea name="mensaje" id="mensaje" rows="8" cols="80" value="[[datos.mensaje]]"></textarea>
+      <button type="button" name="button" on-tap="guardar">Modificar datos</button>
+    </form>
+    </div>
+  </template>
+
+  <script>
+    // esto que viene aca abajo es el constructor de web components de Polymer, es un constructor simple.
+    Polymer({
+      is: 'pfd-app', // acá le decimos el id de nuestro web component con el que lo vamos a registrar en el DOM
+      properties: { // properties! son objetos dentro del sistema de bindeo de Polymer, pueden ser numericos, cadenas, arrays, etc
+        invitado: { // esta propertie se llama invitado y es de tipo string y tiene un valor "invitado..." que es el que usamos cuando el usuario no está logueado en la app. (Linea 70)
+          type: String,
+          value: 'invitado...'
+        }
+      },
+      login: function(e) { // Nuestra función de login! Polymerfire > firebase-auth ya viene con una función signInWithPopup a la que solo tenemos que llamar, es una funcion del tipo Promise, si no saben lo que son las promises lean por acá (https://developer.mozilla.org/es/docs/Web/JavaScript/Referencia/Objetos_globales/Promise)
+        this.$.auth.signInWithPopup()
+        .then(function(response) {
+          console.log('hay user'); // Acá tenemos un console.log para comprobar mediante la consola que el user se registró con exito.
+        })
+        .catch(function(error) {
+          console.log('error');
+        });
+      },
+      handleError: function(data) {
+        console.log(data); // Este es la función que captura el erro en el login, si ocurre algun error mientras el usuario se está logueando vamos a poder verlo acá.
+      },
+      guardar() { // Y al fin, mi función guardar, la que va a guardar la info que modifique en el formulario en mi base de datos de Firebase. En el boton "Modificar datos" tengo un atributo "on-tap" que vendría a ver algo parecido al evento onclick y que cuando sucede ejecuta una función. La función guardar crea un objeto "dato" con los datos del formulario. En polymer podemos acceder a un objecto del DOM mediante el selector this.OBJETO o si el objecto es un elemento del DOM, por ejemplo un div, podemos acceder a el mediante this.$.ID-OBJETO. Por ejemplo en este caso, this.user.uid toma el valor del objeto uid del objecto user, user es el objeto que nos devuelte firebase-auth cuando nos logueamos. Mas abajo estoy accediendo al valor de un input del form con this.$.usuario.value. Y por ultimo estoy modificando el atributo data de firebase-document y el mismo componente se encarga de guardar la nueva información en la base de datos.
+        var dato = { id: this.user.uid, nombre: this.$.usuario.value, email: this.$.email.value, mensaje: this.$.mensaje.value };
+        this.$.document.data = dato;
+      }
+    });
+  </script>
+</dom-module>
+
+<!-- si bien este es un ejemplo muy simple, pueden extenderlo, es cuestion de sentarse y programar! -->
+
+<!-- ¡Saludos! Matias punx ❤️ -->

@@ -1,0 +1,54 @@
+<!-- ¡Buenas! bienvenidos a este pequeño tutorial sobre web components y firebase.
+Lo primero que van a ver es el arbol de archivos. Si no saben que es bower_components, acá tienen: https://bower.io/
+Polymer usa bower para actualizar sus archivos.
+Despues tenemos index.html, manifest.json, bower.json y la carpeta src que es donde tenemos nuestro componente web que se encarga de todo.
+La carpeta bower_components contiene un monton de librerias y archivos que hacen que funcione la liberia de Polymer, los que están en esta carpeta son los mas basicos, si quieren ver mas componentes vayan a: https://www.webcomponents.org/
+-->
+
+<!-- Ah! me olvidaba, acá les dejo un video de como funciona la pequeña app que estamos haciendo: https://youtu.be/JiK8_hJp8KU
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+    <title>Pequeña demo de Polymer y Firebase</title>
+    <meta name="description" content="Una pequeña demo de Polymer y Firebase">
+    <!-- manifest.json es uno de los requisitos de las nuevas progressive web apps, le da soporte al navegador movil para poder agregar nuestra app al home screen y usarla similar a una app nativa -->
+    <link rel="manifest" href="manifest.json">
+    <!-- Todavia todos los navegadores no soportan el uso de Web components, con la libreria webcomponentsjs le podemos dar soporte a todos aquellos que aun no lo soporten. -->
+    <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    <!-- el primer componente que importamos es el de polymerfire que se va a encargar de hacer la conexion a firebase -->
+    <link rel="import" href="bower_components/polymerfire/polymerfire.html">
+    <link rel="import" href="src/pfd-app/pfd-app.html">
+    <!-- estilos basicos y un simple reset de css -->
+    <style>
+      body {
+        background-color: #fafafa;
+        color: #3a3a3a;
+        font-family: sans-serif;
+        margin: 0;
+        min-height: 100vh; /* 100% viewport height */
+      }
+    </style>
+  </head>
+  <body>
+    <!-- lo primero que van a tener que hacer es crear un nuevo proyecto en Firebase: https://firebase.google.com
+    Cuando la tengan creada en la pestaña overview van a ver un boton violeta que dice agregar firebase a tu web, ahí van a encontrar todos los datos que vamos a necesitar para conectarnos mas abajo.
+    -->
+
+    <!-- despues vamos a ir a la pestaña "autenticación" >> Metodos de acceso, y vamos a activar la opción de Google y abajo, donde dice "agregar dominio" vamos a agregar "localhost" para poder testear nuestra app de manera local -->
+
+    <!-- este web component se encarga de hacer la conexion con firebase. Tiene varios atributos, name: donde definimos el nombre del conector, para mas adelante poder utilizar los datos de conexion con la base de datos. Un id para identificar el componente. el api-key, auth-domain y database-url que podemos recuperar desde firebase.com, con los datos que nos da para conectarnos a nuestra base de datos. -->
+    <firebase-app
+      name="pfd-app"
+      id="pfd-app"
+      api-key="AIzaSyA9qBpRm5bzv9UnOGEQUDin7WXyhGP5nKM"
+      auth-domain="bootcamp01-799f0.firebaseapp.com"
+      database-url="https://bootcamp01-799f0.firebaseio.com">
+    </firebase-app>
+
+    <!-- pfd-app es componente principal de nuestra app -->
+    <pfd-app></pfd-app>
+  </body>
+</html>
